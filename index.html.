@@ -1,271 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>KSST Seva Allocation Tool</title>
+<title>KSST Parayanam Allocation</title>
 
 <style>
-
 body{
-font-family:system-ui,-apple-system,Segoe UI,Roboto;
-margin:0;
-background:#f4f6f9;
-color:#333;
-}
-
-header{
-background:#7a0c18;
-color:white;
+font-family: Arial;
+background:#f6f6f6;
 padding:20px;
 text-align:center;
-}
-
-.logo{
-height:70px;
-margin-bottom:10px;
-}
-
-.container{
-max-width:1000px;
-margin:auto;
-padding:25px;
-}
-
-.card{
-background:white;
-padding:20px;
-border-radius:10px;
-margin-bottom:20px;
-box-shadow:0 3px 8px rgba(0,0,0,0.08);
-}
-
-h2{
-margin-top:0;
 }
 
 textarea{
-width:100%;
-height:120px;
+width:300px;
+height:150px;
 padding:10px;
-margin-top:10px;
-border-radius:6px;
-border:1px solid #ccc;
-}
-
-input[type=file]{
-margin-top:10px;
 }
 
 button{
-background:#7a0c18;
-color:white;
-border:none;
-padding:10px 18px;
-border-radius:6px;
-margin-top:10px;
-cursor:pointer;
-}
-
-button:hover{
-background:#a11528;
+padding:10px 20px;
+margin:10px;
+font-size:16px;
 }
 
 table{
-width:100%;
+margin:auto;
 border-collapse:collapse;
-margin-top:15px;
+background:white;
 }
 
-th,td{
-border:1px solid #ddd;
-padding:10px;
-text-align:left;
+td,th{
+border:1px solid #ccc;
+padding:8px 12px;
 }
-
-th{
-background:#eee;
-}
-
-.footer{
-text-align:center;
-font-size:14px;
-margin-top:30px;
-color:#777;
-}
-
 </style>
 </head>
 
 <body>
 
-<header>
-<img src="ksstlogo.png" class="logo">
-<h1>KSST Seva Allocation Tool</h1>
-<p>Kovai Swaminama Smarana Trust</p>
-</header>
+<h2>KSST Parayanam Allocation</h2>
 
-<div class="container">
-
-<div class="card">
-
-<h2>Devotee Names</h2>
-
-<p>Enter one name per line</p>
+<p>Enter Names (one per line)</p>
 
 <textarea id="names"></textarea>
+<br>
 
-<p>Or Upload CSV</p>
+<button onclick="allocate()">Generate Allocation</button>
 
-<input type="file" id="csvFile">
-
-</div>
-
-
-<div class="card">
-
-<h2>Seva / Tasks</h2>
-
-<p>Enter one task per line</p>
-
-<textarea id="tasks"></textarea>
-
-</div>
-
-
-<div class="card">
-
-<button onclick="allocate()">Allocate Seva</button>
-<button onclick="shuffleNames()">Shuffle Names</button>
-<button onclick="downloadCSV()">Download CSV</button>
-<button onclick="copyResults()">Copy Results</button>
-
-<div id="resultTable"></div>
-
-</div>
-
-<div class="footer">
-KSST Devotional Utility Tool
-</div>
-
-</div>
+<div id="result"></div>
 
 <script>
 
-let allocationData=[];
-
-function shuffle(array){
-for(let i=array.length-1;i>0;i--){
-let j=Math.floor(Math.random()*(i+1));
-[array[i],array[j]]=[array[j],array[i]];
-}
-return array;
-}
-
-function shuffleNames(){
-
-let names=document.getElementById("names").value.split("\n").filter(n=>n.trim()!="");
-names=shuffle(names);
-
-document.getElementById("names").value=names.join("\n");
-
-}
-
 function allocate(){
 
-let names=document.getElementById("names").value.split("\n").filter(n=>n.trim()!="");
-let tasks=document.getElementById("tasks").value.split("\n").filter(t=>t.trim()!="");
+let names = document.getElementById("names").value.trim().split("\n");
 
-if(names.length===0||tasks.length===0){
-alert("Please enter names and tasks");
-return;
-}
+let totalSlokas = 108;
 
-names=shuffle(names);
+let perPerson = Math.floor(totalSlokas / names.length);
+let extra = totalSlokas % names.length;
 
-allocationData=[];
+let start = 1;
 
-for(let i=0;i<names.length;i++){
+let html = "<table>";
+html += "<tr><th>Name</th><th>Section</th></tr>";
 
-let task=tasks[i%tasks.length];
+names.forEach((name,i)=>{
 
-allocationData.push({
-name:names[i],
-task:task
-});
+let count = perPerson + (i < extra ? 1 : 0);
 
-}
+let end = start + count - 1;
 
-renderTable();
+let section = `
+Starting Prayer
+Mahalakshmi Ashtakam
+Poorvanga 1–22
+Nyasa
+Dhyanam 1–8
+Sloka ${start}–${end}
+Phalashruti
+Ending Prayer
+`;
 
-}
+html += `<tr>
+<td>${name}</td>
+<td>${section}</td>
+</tr>`;
 
-function renderTable(){
-
-let html="<table><tr><th>Devotee</th><th>Seva</th></tr>";
-
-allocationData.forEach(r=>{
-html+=<tr><td>${r.name}</td><td>${r.task}</td></tr>;
-});
-
-html+="</table>";
-
-document.getElementById("resultTable").innerHTML=html;
-
-}
-
-document.getElementById("csvFile").addEventListener("change",function(e){
-
-let file=e.target.files[0];
-if(!file)return;
-
-let reader=new FileReader();
-
-reader.onload=function(e){
-
-let text=e.target.result;
-document.getElementById("names").value=text;
-
-};
-
-reader.readAsText(file);
+start = end + 1;
 
 });
 
-function downloadCSV(){
+html += "</table>";
 
-if(allocationData.length===0){
-alert("No data");
-return;
-}
-
-let csv="Devotee,Seva\n";
-
-allocationData.forEach(r=>{
-csv+=${r.name},${r.task}\n;
-});
-
-let blob=new Blob([csv],{type:"text/csv"});
-let url=URL.createObjectURL(blob);
-
-let a=document.createElement("a");
-a.href=url;
-a.download="ksst_allocation.csv";
-a.click();
-
-}
-
-function copyResults(){
-
-let text="KSST Seva Allocation\n\n";
-
-allocationData.forEach(r=>{
-text+=${r.name} → ${r.task}\n;
-});
-
-navigator.clipboard.writeText(text);
-
-alert("Results copied");
+document.getElementById("result").innerHTML = html;
 
 }
 
